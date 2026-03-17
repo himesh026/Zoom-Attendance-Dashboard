@@ -175,20 +175,6 @@ python zoom_attendance_analyzer.py \
 
 ---
 
-## Deployment
-
-The portal is a single HTML file with no backend so deployment is just file hosting.
-
-**Netlify Drop (fastest)** - go to [app.netlify.com/drop](https://app.netlify.com/drop), rename the file to `index.html`, drag it onto the page. Live in under a minute.
-
-**GitHub Pages** - create a repo, upload as `index.html`, enable Pages in settings. Live at `username.github.io/repo-name`. Easy to update by just pushing a new file.
-
-**Vercel** - best if you want a custom domain like `attendance.yourcompany.com`. Connect a GitHub repo, auto-deploys on push.
-
-**Share directly** - email the file or share via Drive/OneDrive. Anyone who downloads it can open it locally - works fully offline.
-
----
-
 ## Troubleshooting
 
 **Someone attended but shows as Absent**  
