@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zoom Attendance Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0b0d;
+    --surface:   #111316;
+    --surface2:  #181b20;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #e8eaed;
+    --muted:     #6b7280;
+    --muted2:    #9ca3af;
+    --green:     #34d399;
+    --green-dim: rgba(52,211,153,0.12);
+    --red:       #f87171;
+    --red-dim:   rgba(248,113,113,0.12);
+    --amber:     #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+    --blue:      #60a5fa;
+    --blue-dim:  rgba(96,165,250,0.12);
+    --accent:    #a78bfa;
+    --accent-dim:rgba(167,139,250,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 32px 80px; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 0 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+  .logo p  { font-size: 0.75rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .header-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.72rem;
+    color: var(--muted2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── UPLOAD SECTION ── */
+  .upload-section { margin-bottom: 48px; }
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+  .drop-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .drop-zone.csv::before  { background: radial-gradient(ellipse at center, rgba(96,165,250,0.06), transparent 70%); }
+  .drop-zone.guests::before { background: radial-gradient(ellipse at center, rgba(167,139,250,0.06), transparent 70%); }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--border2); }
+  .drop-zone.csv:hover, .drop-zone.csv.dragover   { border-color: rgba(96,165,250,0.5); }
+  .drop-zone.guests:hover, .drop-zone.guests.dragover { border-color: rgba(167,139,250,0.5); }
+  .drop-zone:hover::before, .drop-zone.dragover::before { opacity: 1; }
+
+  .drop-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin: 0 auto 16px;
+  }
+  .drop-zone.csv    .drop-icon { background: var(--blue-dim); }
+  .drop-zone.guests .drop-icon { background: var(--accent-dim); }
+
+  .drop-zone h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .drop-zone p  { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .drop-zone .file-name {
+    margin-top: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: none;
+  }
+  .drop-zone.csv .file-name    { background: var(--blue-dim); color: var(--blue); display: none; }
+  .drop-zone.guests .file-name { background: var(--accent-dim); color: var(--accent); display: none; }
+  .drop-zone.loaded .file-name { display: inline-block; }
+  input[type=file] { display: none; }
+
+  /* ── OPTIONS ROW ── */
+  .options-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .opt-group { display: flex; flex-direction: column; gap: 6px; }
+  .opt-group label { font-size: 0.72rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .opt-group input[type=text], .opt-group input[type=number] {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 9px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .opt-group input[type=number] { width: 80px; }
+  .opt-group input:focus { border-color: var(--accent); }
+
+  .analyze-btn {
+    background: var(--accent);
+    color: #0a0b0d;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+    margin-left: auto;
+  }
+  .analyze-btn:hover  { background: #c4b5fd; transform: translateY(-1px); }
+  .analyze-btn:active { transform: translateY(0); }
+  .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── DASHBOARD ── */
+  #dashboard { display: none; }
+
+  .meeting-meta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 32px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-item .ml { font-size: 0.68rem; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+  .meta-item .mv { font-size: 0.92rem; font-weight: 600; color: var(--text); }
+  .meta-sep { width: 1px; background: var(--border); align-self: stretch; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 16px 16px;
+  }
+  .stat-card.s-blue::after  { background: var(--blue); }
+  .stat-card.s-green::after { background: var(--green); }
+  .stat-card.s-amber::after { background: var(--amber); }
+  .stat-card.s-red::after   { background: var(--red); }
+  .stat-card .sc-label { font-size: 0.68rem; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .stat-card .sc-num { font-family: 'Lora', serif; font-size: 3rem; font-weight: 600; line-height: 1; }
+  .stat-card.s-blue  .sc-num { color: var(--blue); }
+  .stat-card.s-green .sc-num { color: var(--green); }
+  .stat-card.s-amber .sc-num { color: var(--amber); }
+  .stat-card.s-red   .sc-num { color: var(--red); }
+  .stat-card .sc-sub { font-size: 0.72rem; color: var(--muted); margin-top: 8px; }
+
+  /* ── SEARCH & FILTER ── */
+  .controls-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 9px 14px 9px 38px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    outline: none;
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 9px 16px;
+    color: var(--muted2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active.f-all    { background: var(--accent-dim); border-color: rgba(167,139,250,0.4); color: var(--accent); }
+  .filter-btn.active.f-full   { background: var(--green-dim);  border-color: rgba(52,211,153,0.4);  color: var(--green); }
+  .filter-btn.active.f-early  { background: var(--amber-dim);  border-color: rgba(251,191,36,0.4);  color: var(--amber); }
+  .filter-btn.active.f-absent { background: var(--red-dim);    border-color: rgba(248,113,113,0.4); color: var(--red); }
+  .export-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 9px 16px;
+    color: var(--muted2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .export-btn:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ── WARNING BANNER ── */
+  .warn-banner {
+    background: var(--amber-dim);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 0.82rem;
+    color: var(--amber);
+    line-height: 1.6;
+    display: none;
+  }
+  .warn-banner.show { display: block; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .table-header h3 { font-size: 0.9rem; font-weight: 600; }
+  .tbl-count {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-left: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    padding: 12px 24px;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--muted2); }
+  thead th.sorted { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 12px 24px; font-size: 0.82rem; }
+
+  .td-name { font-weight: 600; color: var(--text); }
+  .td-email { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.72rem; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .b-full   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(52,211,153,0.25); }
+  .b-early  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(251,191,36,0.25); }
+  .b-absent { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(248,113,113,0.25); }
+  .b-full   .badge-dot { background: var(--green); }
+  .b-early  .badge-dot { background: var(--amber); }
+  .b-absent .badge-dot { background: var(--red); }
+
+  .dur-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .dur-bar-bg {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface2);
+    width: 80px;
+    overflow: hidden;
+  }
+  .dur-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .dur-bar-fill.full   { background: var(--green); }
+  .dur-bar-fill.early  { background: var(--amber); }
+  .dur-val { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted); min-width: 44px; }
+
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    display: none;
+  }
+  .empty-state.show { display: block; }
+
+  /* ── MINI BAR CHART ── */
+  .chart-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .chart-card h4 { font-size: 0.8rem; font-weight: 600; color: var(--muted2); margin-bottom: 20px; letter-spacing: 0.04em; }
+  .donut-wrap { display: flex; align-items: center; gap: 24px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
+  .legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { color: var(--muted2); flex: 1; }
+  .legend-val { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .legend-pct { font-family: 'DM Mono', monospace; color: var(--muted); font-size: 0.72rem; margin-left: 4px; }
+
+  .duration-bars { display: flex; flex-direction: column; gap: 8px; }
+  .dur-row { display: flex; align-items: center; gap: 12px; font-size: 0.76rem; }
+  .dur-row-label { color: var(--muted2); width: 110px; flex-shrink: 0; font-family: 'DM Mono', monospace; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dur-row-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+  .dur-row-fill { height: 100%; border-radius: 3px; background: var(--green); }
+  .dur-row-val { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; width: 36px; text-align: right; }
+
+  /* ── RESET ── */
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    padding: 7px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .upload-grid { grid-template-columns: 1fr; }
+    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+    .chart-section { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .page { padding: 0 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <h1>Attendance Portal</h1>
+        <p>Zoom Meeting Analyzer</p>
+      </div>
+    </div>
+    <div class="header-badge">v2.0 · client-side · no data leaves your browser</div>
+  </header>
+
+  <!-- UPLOAD SECTION -->
+  <div class="upload-section">
+    <div class="section-label">01 — Upload Files</div>
+    <div class="upload-grid">
+
+      <!-- CSV Drop Zone -->
+      <div class="drop-zone csv" id="csvZone" onclick="document.getElementById('csvInput').click()">
+        <div ondragover="handleDrag(event,'csvZone')" ondragleave="handleDragLeave('csvZone')" ondrop="handleDrop(event,'csv')" style="position:absolute;inset:0;border-radius:16px;"></div>
+        <div class="drop-icon">📋</div>
+        <h3>Zoom CSV Report</h3>
+        <p>Export from Zoom → Reports → Usage → Meeting<br>then upload the .csv file here</p>
+        <span class="file-name" id="csvName">no file</span>
+        <input type="file" id="csvInput" accept=".csv" onchange="handleFile(event,'csv')">
+      </div>
+
+      <!-- Guests Drop Zone -->
+      <div class="drop-zone guests" id="guestsZone" onclick="document.getElementById('guestsInput').click()">
+        <div ondragover="handleDrag(event,'guestsZone')" ondragleave="handleDragLeave('guestsZone')" ondrop="handleDrop(event,'guests')" style="position:absolute;inset:0;border-radius:16px;"></div>
+        <div class="drop-icon">👥</div>
+        <h3>Guest List</h3>
+        <p>Paste your invite list as a .txt file<br>Format: Name &lt;email&gt;, Name &lt;email&gt;, ...</p>
+        <span class="file-name" id="guestsName">no file</span>
+        <input type="file" id="guestsInput" accept=".txt,.csv" onchange="handleFile(event,'guests')">
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="options-row">
+      <div class="opt-group">
+        <label>HOST EMAIL (optional)</label>
+        <input type="text" id="hostEmail" placeholder="host@company.com" style="width:240px;">
+      </div>
+      <div class="opt-group">
+        <label>EARLY FLAG THRESHOLD (min)</label>
+        <input type="number" id="threshold" value="15" min="1" max="120">
+      </div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze Meeting →</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div class="section-label" style="margin-bottom:0;">02 — Dashboard</div>
+      <button class="reset-btn" onclick="resetAll()">← Upload New Files</button>
+    </div>
+
+    <!-- Meeting Meta -->
+    <div class="meeting-meta" id="meetingMeta"></div>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card s-blue">
+        <div class="sc-label">Total Invited</div>
+        <div class="sc-num" id="stat-total">0</div>
+        <div class="sc-sub">guests in list</div>
+      </div>
+      <div class="stat-card s-green">
+        <div class="sc-label">Fully Attended</div>
+        <div class="sc-num" id="stat-full">0</div>
+        <div class="sc-sub" id="stat-full-sub">above threshold</div>
+      </div>
+      <div class="stat-card s-amber">
+        <div class="sc-label">Left Early</div>
+        <div class="sc-num" id="stat-early">0</div>
+        <div class="sc-sub" id="stat-early-sub">≤15 min</div>
+      </div>
+      <div class="stat-card s-red">
+        <div class="sc-label">Did Not Join</div>
+        <div class="sc-num" id="stat-absent">0</div>
+        <div class="sc-sub">absent from meeting</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-section">
+      <div class="chart-card">
+        <h4>ATTENDANCE BREAKDOWN</h4>
+        <div class="donut-wrap">
+          <canvas id="donutCanvas" width="120" height="120" style="flex-shrink:0;"></canvas>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h4>TOP EARLY LEAVERS</h4>
+        <div class="duration-bars" id="earlyBars"></div>
+      </div>
+    </div>
+
+    <!-- Warning Banner -->
+    <div class="warn-banner" id="warnBanner"></div>
+
+    <!-- Table -->
+    <div class="controls-row">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-box" id="searchBox" placeholder="Search by name or email…" oninput="renderTable()">
+      </div>
+      <button class="filter-btn f-all active" onclick="setFilter('all')">All</button>
+      <button class="filter-btn f-full"   onclick="setFilter('full')">✓ Attended</button>
+      <button class="filter-btn f-early"  onclick="setFilter('early')">⏱ Left Early</button>
+      <button class="filter-btn f-absent" onclick="setFilter('absent')">✗ Absent</button>
+      <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3 id="tableTitle">All Guests</h3>
+        <span class="tbl-count" id="tableCount">0</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th onclick="setSortCol('name')"     id="th-name">NAME ↕</th>
+            <th onclick="setSortCol('email')"    id="th-email">EMAIL ↕</th>
+            <th onclick="setSortCol('status')"   id="th-status">STATUS ↕</th>
+            <th onclick="setSortCol('duration')" id="th-duration">DURATION ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState">No results match your search.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let csvData = null, guestsData = null;
+let results = [], unaccounted = [];
+let currentFilter = 'all';
+let sortCol = 'status', sortAsc = true;
+let meetingDuration = 48;
+
+// ═══════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════
+function handleFile(e, type) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    if (type === 'csv') {
+      csvData = ev.target.result;
+      document.getElementById('csvZone').classList.add('loaded');
+      document.getElementById('csvName').textContent = file.name;
+    } else {
+      guestsData = ev.target.result;
+      document.getElementById('guestsZone').classList.add('loaded');
+      document.getElementById('guestsName').textContent = file.name;
+    }
+    checkReady();
+  };
+  reader.readAsText(file);
+}
+
+function handleDrag(e, zoneId) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+function handleDragLeave(zoneId) {
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+function handleDrop(e, type) {
+  e.preventDefault(); e.stopPropagation();
+  const zoneId = type === 'csv' ? 'csvZone' : 'guestsZone';
+  document.getElementById(zoneId).classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const fakeEvt = { target: { files: [file] } };
+  handleFile(fakeEvt, type);
+}
+
+function checkReady() {
+  document.getElementById('analyzeBtn').disabled = !(csvData && guestsData);
+}
+
+// ═══════════════════════════════════════════════
+// PARSING
+// ═══════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.split('\n');
+  if (!lines.length) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    // Handle quoted fields
+    const cells = [];
+    let cur = '', inQ = false;
+    for (const ch of lines[i]) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cells.push(cur.trim());
+    const row = {};
+    headers.forEach((h, idx) => row[h] = (cells[idx] || '').replace(/^"|"$/g,'').trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+function parseGuests(text) {
+  const guests = {};
+  const pattern = /"?([^"<,\n]+?)"?\s*<([^>]+)>/g;
+  let m;
+  while ((m = pattern.exec(text)) !== null) {
+    const name = m[1].trim();
+    const email = m[2].trim().toLowerCase();
+    guests[email] = name;
+  }
+  // bare emails
+  const cleaned = text.replace(/"?[^"<,\n]+?"?\s*<[^>]+>/g, '');
+  const barePattern = /\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)\b/g;
+  while ((m = barePattern.exec(cleaned)) !== null) {
+    const e = m[1].toLowerCase();
+    if (!guests[e]) guests[e] = e;
+  }
+  return guests;
+}
+
+function aggregateAttendance(rows) {
+  const NOISE = ['read.ai', 'dbg/'];
+  const personData = {};
+  for (const row of rows) {
+    const email = (row['Email'] || '').toLowerCase().trim();
+    const name  = (row['Name (original name)'] || '').trim();
+    if (NOISE.some(n => name.toLowerCase().includes(n))) continue;
+    const dur = parseInt(row['Duration (minutes)'] || '0', 10) || 0;
+    const key = email || name.toLowerCase();
+    if (!personData[key]) personData[key] = { name, email, totalDuration: 0, sessions: 0 };
+    personData[key].totalDuration += dur;
+    personData[key].sessions++;
+  }
+  return personData;
+}
+
+function normName(n) { return n.toLowerCase().replace(/[^a-z]/g, ''); }
+function cleanName(n) { return n.replace(/\s*\(.*?\)/g, '').trim(); }
+
+function matchGuests(guests, personData, threshold, hostEmail) {
+  // Build lookups
+  const emailLkp = {};
+  const nameLkp = {};
+  const localLkp = {};
+  const emailAsName = {};
+
+  for (const [key, val] of Object.entries(personData)) {
+    if (val.email) emailLkp[val.email] = key;
+    nameLkp[normName(val.name)] = key;
+    nameLkp[normName(cleanName(val.name))] = key;
+    if (val.email) localLkp[val.email.split('@')[0].toLowerCase()] = key;
+    const dn = val.name.trim().toLowerCase();
+    if (/^[a-z0-9_.+-]+$/.test(dn) && dn.includes('.')) localLkp[dn] = key;
+    if (dn.includes('@')) emailAsName[dn] = key;
+  }
+
+  // Unique-word lookup
+  const wordToKeys = {};
+  for (const [key, val] of Object.entries(personData)) {
+    for (const w of cleanName(val.name).toLowerCase().split(/\s+/)) {
+      if (w.length > 3) {
+        if (!wordToKeys[w]) wordToKeys[w] = new Set();
+        wordToKeys[w].add(key);
+      }
+    }
+  }
+  const uniqueWordLkp = {};
+  for (const [w, ks] of Object.entries(wordToKeys)) {
+    if (ks.size === 1) uniqueWordLkp[w] = [...ks][0];
+  }
+
+  const claimed = new Set();
+  function tryClaim(key) {
+    if (key && !claimed.has(key)) { claimed.add(key); return key; }
+    return null;
+  }
+
+  const results = [];
+  for (const [email, fullName] of Object.entries(guests)) {
+    const local = email.split('@')[0].toLowerCase();
+    let mk = null;
+
+    if (!mk) mk = tryClaim(emailLkp[email]);
+    if (!mk && hostEmail && email === hostEmail) mk = tryClaim(emailLkp[hostEmail]);
+    if (!mk) mk = tryClaim(emailAsName[email]);
+    if (!mk) mk = tryClaim(localLkp[local]);
+    if (!mk) mk = tryClaim(nameLkp[normName(fullName)]);
+    if (!mk) {
+      for (const w of fullName.toLowerCase().split(/\s+/)) {
+        if (w.length > 3 && uniqueWordLkp[w]) {
+          mk = tryClaim(uniqueWordLkp[w]);
+          if (mk) break;
+        }
+      }
+    }
+    if (!mk) {
+      const fn = normName(fullName);
+      const candidates = Object.entries(personData)
+        .filter(([k, v]) => {
+          const an = normName(cleanName(v.name));
+          return an.length > 5 && fn.includes(an) && !claimed.has(k);
+        });
+      if (candidates.length === 1) mk = tryClaim(candidates[0][0]);
+    }
+
+    if (mk) {
+      const dur = personData[mk].totalDuration;
+      results.push({ name: fullName, email, status: dur <= threshold ? 'early' : 'full', duration: dur, sessions: personData[mk].sessions });
+    } else {
+      results.push({ name: fullName, email, status: 'absent', duration: 0, sessions: 0 });
+    }
+  }
+
+  const unaccounted = Object.entries(personData)
+    .filter(([k]) => !claimed.has(k))
+    .map(([, v]) => v);
+
+  return { results, unaccounted };
+}
+
+// ═══════════════════════════════════════════════
+// MAIN ANALYZE
+// ═══════════════════════════════════════════════
+function analyze() {
+  const rows = parseCSV(csvData);
+  const guests = parseGuests(guestsData);
+  const personData = aggregateAttendance(rows);
+  const threshold = parseInt(document.getElementById('threshold').value, 10) || 15;
+  const hostEmail = document.getElementById('hostEmail').value.trim().toLowerCase();
+
+  try {
+    meetingDuration = parseInt(rows[0]['Duration (minutes)'], 10) || 48;
+  } catch(e) { meetingDuration = 48; }
+
+  const out = matchGuests(guests, personData, threshold, hostEmail);
+  results = out.results;
+  unaccounted = out.unaccounted;
+
+  renderDashboard(rows, threshold);
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderDashboard(rows, threshold) {
+  // Meeting meta
+  const topic   = (rows[0] && rows[0]['Topic']) ? rows[0]['Topic'] : 'Meeting';
+  const start   = (rows[0] && rows[0]['Start time']) ? rows[0]['Start time'].slice(0,10) : '';
+  const dur     = meetingDuration;
+  const hostN   = (rows[0] && rows[0]['Host name']) ? rows[0]['Host name'] : '—';
+  const parts   = (rows[0] && rows[0]['Participants']) ? rows[0]['Participants'] : '—';
+
+  document.getElementById('meetingMeta').innerHTML = `
+    <div class="meta-item"><span class="ml">Meeting</span><span class="mv">${topic}</span></div>
+    <div class="meta-sep"></div>
+    <div class="meta-item"><span class="ml">Date</span><span class="mv">${start}</span></div>
+    <div class="meta-sep"></div>
+    <div class="meta-item"><span class="ml">Duration</span><span class="mv">${dur} min</span></div>
+    <div class="meta-sep"></div>
+    <div class="meta-item"><span class="ml">Host</span><span class="mv">${hostN}</span></div>
+    <div class="meta-sep"></div>
+    <div class="meta-item"><span class="ml">Zoom Participants</span><span class="mv">${parts}</span></div>
+    <div class="meta-sep"></div>
+    <div class="meta-item"><span class="ml">Flagged (≤${threshold} min)</span><span class="mv" style="color:var(--amber)">${results.filter(r=>r.status==='early').length} people</span></div>
+  `;
+
+  // Stats
+  const full   = results.filter(r => r.status === 'full');
+  const early  = results.filter(r => r.status === 'early');
+  const absent = results.filter(r => r.status === 'absent');
+  document.getElementById('stat-total').textContent = results.length;
+  document.getElementById('stat-full').textContent  = full.length;
+  document.getElementById('stat-early').textContent = early.length;
+  document.getElementById('stat-absent').textContent= absent.length;
+  document.getElementById('stat-full-sub').textContent = `>${threshold} min`;
+  document.getElementById('stat-early-sub').textContent= `≤${threshold} min`;
+
+  // Donut
+  drawDonut(full.length, early.length, absent.length);
+
+  // Early bars
+  renderEarlyBars(early);
+
+  // Warning
+  const wb = document.getElementById('warnBanner');
+  if (unaccounted.length > 0) {
+    wb.classList.add('show');
+    const names = unaccounted.map(v => `<strong>${v.name}</strong>`).join(', ');
+    wb.innerHTML = `⚠️ <strong>${unaccounted.length} attendee(s) from Zoom CSV could not be matched to your guest list</strong> — they likely joined with a nickname or unrecognized display name: ${names}`;
+  } else {
+    wb.classList.remove('show');
+  }
+
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════
+// DONUT CHART
+// ═══════════════════════════════════════════════
+function drawDonut(full, early, absent) {
+  const canvas = document.getElementById('donutCanvas');
+  const ctx = canvas.getContext('2d');
+  const total = full + early + absent;
+  const cx = 60, cy = 60, r = 50, thick = 16;
+  ctx.clearRect(0, 0, 120, 120);
+
+  const segments = [
+    { val: full,   color: '#34d399' },
+    { val: early,  color: '#fbbf24' },
+    { val: absent, color: '#f87171' },
+  ];
+
+  let startAngle = -Math.PI / 2;
+  for (const seg of segments) {
+    if (!seg.val) continue;
+    const sweep = (seg.val / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, startAngle + sweep);
+    ctx.arc(cx, cy, r - thick, startAngle + sweep, startAngle, true);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    startAngle += sweep;
+  }
+
+  // Centre text
+  ctx.fillStyle = '#e8eaed';
+  ctx.font = '700 18px Lora, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, cx, cy - 7);
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '400 10px DM Mono, monospace';
+  ctx.fillText('total', cx, cy + 10);
+
+  // Legend
+  const pct = n => total ? Math.round(n / total * 100) : 0;
+  document.getElementById('donutLegend').innerHTML = `
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span class="legend-label">Attended</span><span class="legend-val">${full}</span><span class="legend-pct">${pct(full)}%</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div><span class="legend-label">Left Early</span><span class="legend-val">${early}</span><span class="legend-pct">${pct(early)}%</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span class="legend-label">Absent</span><span class="legend-val">${absent}</span><span class="legend-pct">${pct(absent)}%</span></div>
+  `;
+}
+
+function renderEarlyBars(early) {
+  const el = document.getElementById('earlyBars');
+  if (!early.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:16px 0;">No early leavers 🎉</div>';
+    return;
+  }
+  const sorted = [...early].sort((a,b) => a.duration - b.duration).slice(0, 8);
+  const max = Math.max(...sorted.map(r => r.duration), 1);
+  el.innerHTML = sorted.map(r => `
+    <div class="dur-row">
+      <div class="dur-row-label" title="${r.name}">${r.name.split(' ')[0]}</div>
+      <div class="dur-row-bar"><div class="dur-row-fill" style="width:${Math.round(r.duration/max*100)}%;background:var(--amber);"></div></div>
+      <div class="dur-row-val">${r.duration}m</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn.f-' + f).classList.add('active');
+  renderTable();
+}
+
+function setSortCol(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  document.getElementById('th-' + col).classList.add('sorted');
+  renderTable();
+}
+
+function renderTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  const threshold = parseInt(document.getElementById('threshold').value, 10) || 15;
+
+  let data = results.filter(r => {
+    if (currentFilter === 'full'   && r.status !== 'full')   return false;
+    if (currentFilter === 'early'  && r.status !== 'early')  return false;
+    if (currentFilter === 'absent' && r.status !== 'absent') return false;
+    if (q && !r.name.toLowerCase().includes(q) && !r.email.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  data.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'status') { const ord = {full:0,early:1,absent:2}; va = ord[va]??3; vb = ord[vb]??3; }
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    return sortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  const titles = { all:'All Guests', full:'Attended', early:'Left Early', absent:'Did Not Join' };
+  document.getElementById('tableTitle').textContent = titles[currentFilter] || 'All Guests';
+  document.getElementById('tableCount').textContent = `${data.length} people`;
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if (!data.length) {
+    tbody.innerHTML = '';
+    empty.classList.add('show');
+    return;
+  }
+  empty.classList.remove('show');
+
+  tbody.innerHTML = data.map((r, i) => {
+    let badge, barClass;
+    if (r.status === 'full')   { badge = `<span class="badge b-full"><span class="badge-dot"></span>Attended</span>`;    barClass = 'full'; }
+    else if (r.status === 'early')  { badge = `<span class="badge b-early"><span class="badge-dot"></span>Left Early</span>`;  barClass = 'early'; }
+    else                           { badge = `<span class="badge b-absent"><span class="badge-dot"></span>Absent</span>`;   barClass = ''; }
+
+    const durCell = r.status !== 'absent'
+      ? `<div class="dur-bar-wrap">
+          <div class="dur-bar-bg"><div class="dur-bar-fill ${barClass}" style="width:${Math.round(r.duration/meetingDuration*100)}%"></div></div>
+          <span class="dur-val">${r.duration} min</span>
+         </div>`
+      : `<span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:0.75rem;">—</span>`;
+
+    return `<tr>
+      <td><div class="td-name">${r.name}</div></td>
+      <td><div class="td-email">${r.email}</div></td>
+      <td>${badge}</td>
+      <td>${durCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════
+function exportCSV() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  let data = results.filter(r => {
+    if (currentFilter === 'full'   && r.status !== 'full')   return false;
+    if (currentFilter === 'early'  && r.status !== 'early')  return false;
+    if (currentFilter === 'absent' && r.status !== 'absent') return false;
+    if (q && !r.name.toLowerCase().includes(q) && !r.email.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const header = 'Name,Email,Status,Duration (min),Sessions\n';
+  const rows = data.map(r =>
+    `"${r.name}","${r.email}","${r.status}",${r.duration},${r.sessions}`
+  ).join('\n');
+
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `attendance_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+function resetAll() {
+  csvData = null; guestsData = null; results = []; unaccounted = [];
+  currentFilter = 'all'; sortCol = 'status'; sortAsc = true;
+  document.getElementById('csvZone').classList.remove('loaded');
+  document.getElementById('guestsZone').classList.remove('loaded');
+  document.getElementById('csvName').textContent = 'no file';
+  document.getElementById('guestsName').textContent = 'no file';
+  document.getElementById('csvInput').value = '';
+  document.getElementById('guestsInput').value = '';
+  document.getElementById('searchBox').value = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('dashboard').style.display = 'none';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn.f-all').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
