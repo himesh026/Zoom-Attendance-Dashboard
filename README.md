@@ -1,6 +1,6 @@
 # Zoom Attendance Portal
 
-A browser-based tool that analyzes Zoom meeting attendance. Upload your Zoom CSV export and guest list — get a live dashboard showing who attended, who left early, and who never showed up.
+A browser-based tool that analyzes Zoom meeting attendance. Upload your Zoom CSV export and guest list - get a live dashboard showing who attended, who left early, and who never showed up.
 
 No backend. No server. Everything runs in your browser, nothing leaves your device.
 
@@ -10,9 +10,9 @@ No backend. No server. Everything runs in your browser, nothing leaves your devi
 
 | File | Purpose |
 |------|---------|
-| `zoom_attendance_portal.html` | Open this in a browser — it's the full portal |
+| `zoom_attendance_portal.html` | Open this in a browser - it's the full portal |
 | `zoom_attendance_analyzer.py` | Command-line version if you prefer terminal |
-| `guests.txt` | Your team's invite list — update this each week |
+| `guests.txt` | Your team's invite list - update this each week |
 
 ---
 
@@ -30,7 +30,7 @@ No backend. No server. Everything runs in your browser, nothing leaves your devi
 
 In Zoom web portal: **Reports → Usage → click the participant count on your meeting → Export with meeting data**
 
-Make sure you click the participant count number, not the meeting title. And use "Export with meeting data" not just "Export" — the full version includes the meeting topic and duration which populate the dashboard header.
+Make sure you click the participant count number, not the meeting title. And use "Export with meeting data" not just "Export" - the full version includes the meeting topic and duration which populate the dashboard header.
 
 ---
 
@@ -44,23 +44,23 @@ Alice Johnson <alice.j@company.com>, bob.wilson@company.com,
 "Dr. Carol White" <carol.w@company.com>
 ```
 
-Bare emails without names work too. Entries can span multiple lines — commas are the separator.
+Bare emails without names work too. Entries can span multiple lines - commas are the separator.
 
 ---
 
 ## How Matching Works
 
-The tricky part is that Zoom lets people join with any display name they want. Someone invited as `alice.j@company.com` might show up in the CSV as `"Alice"`, `"alice.j"`, or their full email. The portal handles this with a 7-step chain — it tries each step in order and stops at the first match.
+The tricky part is that Zoom lets people join with any display name they want. Someone invited as `alice.j@company.com` might show up in the CSV as `"Alice"`, `"alice.j"`, or their full email. The portal handles this with a 7-step chain - it tries each step in order and stops at the first match.
 
-**Step 1 — Direct email match**  
-Guest email matches the `Email` column in the CSV exactly. Most reliable — only works when the person is logged into their Zoom account.
+**Step 1 - Direct email match**  
+Guest email matches the `Email` column in the CSV exactly. Most reliable - only works when the person is logged into their Zoom account.
 
 ```
 Guest list:  john.smith@company.com
 Zoom CSV:    Email = john.smith@company.com  ✓
 ```
 
-**Step 2 — Host match**  
+**Step 2 - Host match**  
 Zoom appends `(Host)` to the host's display name, which breaks normal matching. If you provide the host email in the settings field, it matches them by email directly and ignores the display name.
 
 ```
@@ -68,7 +68,7 @@ Guest list:  host@company.com
 Zoom CSV:    Name = "Sarah Chen (Host)", Email = host@company.com  ✓
 ```
 
-**Step 3 — Email used as display name**  
+**Step 3 - Email used as display name**  
 Some people join with their full email as their Zoom display name.
 
 ```
@@ -76,7 +76,7 @@ Guest list:  alice.j@company.com
 Zoom CSV:    Name = "alice.j@company.com"  ✓
 ```
 
-**Step 4 — Local-part match**  
+**Step 4 - Local-part match**  
 Some people join with just the part before the `@` as their display name. Common when joining from a browser without a Zoom account.
 
 ```
@@ -84,7 +84,7 @@ Guest list:  alice.j@company.com  →  local part = "alice.j"
 Zoom CSV:    Name = "alice.j"  ✓
 ```
 
-**Step 5 — Exact normalized name**  
+**Step 5 - Exact normalized name**  
 Strips all non-letter characters, lowercases both names, then compares. Handles casing differences, extra suffixes like `(ace)`, and punctuation.
 
 ```
@@ -93,8 +93,8 @@ Zoom CSV:    "waqid abbas ( ace )" →  normalizes to  "waqidabbasace"
                                                       ↑ still matches on prefix
 ```
 
-**Step 6 — Unique-word match**  
-Takes each word (>3 letters) from the guest's name and checks if that word appears in **exactly one** attendee's display name across the whole CSV. If a word appears in two or more rows it's skipped entirely — this is what prevents false matches on common names.
+**Step 6 - Unique-word match**  
+Takes each word (>3 letters) from the guest's name and checks if that word appears in **exactly one** attendee's display name across the whole CSV. If a word appears in two or more rows it's skipped entirely - this is what prevents false matches on common names.
 
 ```
 Guest list:  "Sabarna Senthilkumar"
@@ -104,7 +104,7 @@ Guest list:  "Prateek Singh"
 Word "singh" appears in 3 CSV rows        →  skipped, too ambiguous
 ```
 
-**Step 7 — Substring match**  
+**Step 7 - Substring match**  
 Checks if the attendee's display name (must be >5 characters) is contained inside the guest's full normalized name, and only one such attendee qualifies.
 
 ```
@@ -117,7 +117,7 @@ If all 7 steps fail, the guest is marked **Absent**. The system never guesses wh
 
 ### Deduplication
 
-Once a CSV row is claimed by a guest it can't be claimed again. So if you have two guests named `mehedi.h1@company.com` and `mehedi.h2@company.com` but only one "Mehedi Hasan" row in the CSV — the first guest claims it, the second is correctly marked Absent.
+Once a CSV row is claimed by a guest it can't be claimed again. So if you have two guests named `mehedi.h1@company.com` and `mehedi.h2@company.com` but only one "Mehedi Hasan" row in the CSV - the first guest claims it, the second is correctly marked Absent.
 
 ### Why not fuzzy matching?
 
@@ -134,9 +134,9 @@ In a 200-person meeting, words like `sharma`, `singh`, `kumar`, `muhammad` appea
 | ✗ Absent | No CSV row could be confidently matched |
 | ⚠️ Unaccounted | In Zoom CSV but not matched to any guest |
 
-Duration is summed across all sessions — if someone dropped and rejoined, the reconnect time is added together.
+Duration is summed across all sessions - if someone dropped and rejoined, the reconnect time is added together.
 
-The threshold defaults to 15 minutes. Change it before analyzing — for a 30-minute standup you might use 10, for an hour-long session maybe 20.
+The threshold defaults to 15 minutes. Change it before analyzing - for a 30-minute standup you might use 10, for an hour-long session maybe 20.
 
 ---
 
@@ -179,13 +179,13 @@ python zoom_attendance_analyzer.py \
 
 The portal is a single HTML file with no backend so deployment is just file hosting.
 
-**Netlify Drop (fastest)** — go to [app.netlify.com/drop](https://app.netlify.com/drop), rename the file to `index.html`, drag it onto the page. Live in under a minute.
+**Netlify Drop (fastest)** - go to [app.netlify.com/drop](https://app.netlify.com/drop), rename the file to `index.html`, drag it onto the page. Live in under a minute.
 
-**GitHub Pages** — create a repo, upload as `index.html`, enable Pages in settings. Live at `username.github.io/repo-name`. Easy to update by just pushing a new file.
+**GitHub Pages** - create a repo, upload as `index.html`, enable Pages in settings. Live at `username.github.io/repo-name`. Easy to update by just pushing a new file.
 
-**Vercel** — best if you want a custom domain like `attendance.yourcompany.com`. Connect a GitHub repo, auto-deploys on push.
+**Vercel** - best if you want a custom domain like `attendance.yourcompany.com`. Connect a GitHub repo, auto-deploys on push.
 
-**Share directly** — email the file or share via Drive/OneDrive. Anyone who downloads it can open it locally — works fully offline.
+**Share directly** - email the file or share via Drive/OneDrive. Anyone who downloads it can open it locally - works fully offline.
 
 ---
 
@@ -207,5 +207,5 @@ If only one row exists in the CSV, the first guest in the list order claims it. 
 
 ## Requirements
 
-**Portal** — any modern browser, no installation  
-**Python script** — Python 3.7+, no third-party libraries needed
+**Portal** - any modern browser, no installation  
+**Python script** - Python 3.7+, no third-party libraries needed
